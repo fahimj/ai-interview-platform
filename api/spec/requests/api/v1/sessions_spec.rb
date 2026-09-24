@@ -58,5 +58,12 @@ RSpec.describe 'Sessions API Characterization', type: :request do
       expect(session_record.reload.status).to eq('ended')
       expect(session_record.end_reason).to eq('all_covered')
     end
+
+    it 'redirects GET /interview/:token to the web frontend URL' do
+      get "/interview/#{session_record.invite_token}"
+
+      expect(response).to have_http_status(:redirect)
+      expect(response).to redirect_to("http://localhost:5173/interview/#{session_record.invite_token}")
+    end
   end
 end
