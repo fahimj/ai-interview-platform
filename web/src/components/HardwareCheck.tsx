@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { testInternetSpeed, DEFAULT_THRESHOLDS, type InternetSpeedResult } from "@/utils/internetSpeedTest";
 import {
     ProctoringState,
@@ -43,34 +43,63 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
         microphone: ProctoringState.WAITING,
     });
     const [allPassed, setAllPassed] = useState(false);
+    const [softBypass, setSoftBypass] = useState(false);
     const [internetResult, setInternetResult] = useState<InternetSpeedResult | null>(null);
     const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
     const [audioLevel, setAudioLevel] = useState<number>(0);
     const videoRef = useRef<HTMLVideoElement>(null);
 
+    const audioStreamRef = useRef<MediaStream | null>(null);
+    const monitorAudioCtxRef = useRef<AudioContext | null>(null);
+    const playbackAudioCtxRef = useRef<AudioContext | null>(null);
+    const rafIdRef = useRef<number | null>(null);
+
+    const stopAllMediaTracksAndContexts = useCallback(() => {
+        if (rafIdRef.current) {
+            cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = null;
+        }
+        if (monitorAudioCtxRef.current && monitorAudioCtxRef.current.state !== "closed") {
+            monitorAudioCtxRef.current.close().catch(() => {});
+            monitorAudioCtxRef.current = null;
+        }
+        if (playbackAudioCtxRef.current && playbackAudioCtxRef.current.state !== "closed") {
+            playbackAudioCtxRef.current.close().catch(() => {});
+            playbackAudioCtxRef.current = null;
+        }
+        audioStreamRef.current?.getTracks().forEach((t) => t.stop());
+        audioStreamRef.current = null;
+        videoStream?.getTracks().forEach((t) => t.stop());
+        setVideoStream(null);
+    }, [videoStream]);
+
     useEffect(() => {
         const { osAndBrowser, internet, camera, audio, microphone } = progress;
+        const internetSatisfied = internet === ProctoringState.PASSED || (internet === ProctoringState.ERROR && softBypass);
         setAllPassed(
             osAndBrowser === ProctoringState.PASSED &&
-            internet === ProctoringState.PASSED &&
+            internetSatisfied &&
             camera === ProctoringState.PASSED &&
             audio === ProctoringState.PASSED &&
             microphone === ProctoringState.PASSED
         );
-    }, [progress]);
+    }, [progress, softBypass]);
 
     useEffect(() => {
         if (videoRef.current && videoStream) videoRef.current.srcObject = videoStream;
     }, [videoStream]);
 
     useEffect(() => {
-        return () => { videoStream?.getTracks().forEach((t) => t.stop()); };
-    }, [videoStream]);
+        return () => {
+            stopAllMediaTracksAndContexts();
+        };
+    }, [stopAllMediaTracksAndContexts]);
 
     const checkAudioPlayback = async (): Promise<boolean> => {
         try {
             const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
             const ctx = new AudioCtx();
+            playbackAudioCtxRef.current = ctx;
             if (ctx.state === "suspended") await ctx.resume();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -78,6 +107,9 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
             gain.connect(ctx.destination);
             gain.gain.setValueAtTime(0.01, ctx.currentTime);
             osc.frequency.setValueAtTime(440, ctx.currentTime);
+            osc.onended = () => {
+                ctx.close().catch(() => {});
+            };
             osc.start(ctx.currentTime);
             osc.stop(ctx.currentTime + 0.1);
             return true;
@@ -86,8 +118,10 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
 
     const startAudioLevelMonitoring = (stream: MediaStream) => {
         try {
+            audioStreamRef.current = stream;
             const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
             const ctx = new AudioCtx();
+            monitorAudioCtxRef.current = ctx;
             const source = ctx.createMediaStreamSource(stream);
             const analyser = ctx.createAnalyser();
             analyser.fftSize = 256;
@@ -96,9 +130,9 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
             const update = () => {
                 analyser.getByteFrequencyData(data);
                 setAudioLevel(Math.round(data.reduce((a, b) => a + b, 0) / data.length));
-                requestAnimationFrame(update);
+                rafIdRef.current = requestAnimationFrame(update);
             };
-            update();
+            rafIdRef.current = requestAnimationFrame(update);
         } catch { /* silent */ }
     };
 
@@ -117,7 +151,7 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
         }, 800);
     }, []);
 
-    // Step 2: Internet
+    // Step 2: Internet (Advisory Connectivity Check)
     useEffect(() => {
         if (progress.internet !== ProctoringState.LOADING) return;
         testInternetSpeed(DEFAULT_THRESHOLDS).then((result) => {
@@ -125,11 +159,10 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
             setProgress((p) => ({
                 ...p,
                 internet: result.passed ? ProctoringState.PASSED : ProctoringState.ERROR,
-                ...(result.passed
-                    ? REQUIRE_CAMERA
-                        ? { camera: ProctoringState.LOADING }
-                        : { camera: ProctoringState.PASSED, microphone: ProctoringState.LOADING }
-                    : {}),
+                // Regardless of advisory status, advance to camera/mic checks so candidate is not locked out
+                ...(REQUIRE_CAMERA
+                    ? { camera: ProctoringState.LOADING }
+                    : { camera: ProctoringState.PASSED, microphone: ProctoringState.LOADING }),
             }));
         });
     }, [progress.internet]);
@@ -176,8 +209,8 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
     }, [progress.audio]);
 
     const retryAll = () => {
-        videoStream?.getTracks().forEach((t) => t.stop());
-        setVideoStream(null);
+        stopAllMediaTracksAndContexts();
+        setSoftBypass(false);
         setInternetResult(null);
         setProgress({
             osAndBrowser: ProctoringState.LOADING,
@@ -198,7 +231,10 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
         { key: "audio", label: "Audio output" },
     ];
 
-    const hasError = Object.values(progress).some((s) => s === ProctoringState.ERROR);
+    const hasError = Object.entries(progress).some(([k, s]) => {
+        if (k === "internet" && softBypass) return false;
+        return s === ProctoringState.ERROR;
+    });
 
     return (
         <div className="rounded-lg border bg-card overflow-hidden">
@@ -251,6 +287,35 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                                 <span className={internetResult.ping <= thresholds.maxPingMs ? "text-green-600" : "text-destructive"}>
                                     {internetResult.ping} ms
                                 </span>
+                                {internetResult.jitter !== undefined && (
+                                    <span className={!thresholds.maxJitterMs || internetResult.jitter <= thresholds.maxJitterMs ? "text-green-600" : "text-destructive"}>
+                                        ~ {internetResult.jitter} ms jitter
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Soft Bypass for Advisory Connectivity */}
+                        {key === "internet" && progress.internet === ProctoringState.ERROR && (
+                            <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-amber-50/70 border border-amber-200/80 rounded-md text-xs text-amber-900">
+                                <span>
+                                    Connection advisory: Latency or jitter is high. You can proceed anyway at your discretion.
+                                </span>
+                                {!softBypass ? (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-xs border-amber-300 bg-white hover:bg-amber-100 text-amber-900 shrink-0"
+                                        onClick={() => setSoftBypass(true)}
+                                    >
+                                        Proceed anyway
+                                    </Button>
+                                ) : (
+                                    <span className="text-xs font-semibold text-green-700 shrink-0">
+                                        ✓ Soft Bypass Enabled
+                                    </span>
+                                )}
                             </div>
                         )}
 
@@ -282,7 +347,10 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                     size="sm"
                     className="ml-auto"
                     disabled={!allPassed}
-                    onClick={onStart}
+                    onClick={() => {
+                        stopAllMediaTracksAndContexts();
+                        onStart?.();
+                    }}
                 >
                     Start Interview
                 </Button>

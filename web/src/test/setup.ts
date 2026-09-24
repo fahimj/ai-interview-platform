@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 import { afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 
@@ -22,7 +22,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Polyfill ResizeObserver
-global.ResizeObserver = class ResizeObserver {
+(globalThis as any).ResizeObserver = class ResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}

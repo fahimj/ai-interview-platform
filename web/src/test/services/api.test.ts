@@ -69,6 +69,6 @@ describe("API Service Interceptors Characterization", () => {
         await expect(errorHandler(error)).rejects.toEqual(error);
         expect(window.location.href).toBe("/login");
 
-        window.location = originalLocation;
+        window.location = originalLocation as any;
     });
 });
