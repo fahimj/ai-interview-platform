@@ -1,6 +1,6 @@
 # 02-mock-gemini-bidi-websocket-server
 
-Status: ready-for-agent
+Status: completed
 Blocked by: 01
 
 ## Context
