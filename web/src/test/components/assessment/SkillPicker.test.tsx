@@ -6,7 +6,7 @@ import SkillPicker from "@/components/assessment/SkillPicker";
 import api from "@/services/api";
 
 describe("SkillPicker Component Characterization", () => {
-    it("characterizes GAP P1-2: onSelect drops skill_id and passes undefined", async () => {
+    it("retains skill_id from taxonomy and passes to onSelect", async () => {
         const onSelect = vi.fn();
         const onOpenChange = vi.fn();
 
@@ -40,7 +40,7 @@ describe("SkillPicker Component Characterization", () => {
         expect(onSelect).toHaveBeenCalledWith(
             expect.objectContaining({
                 skill_label: "Ruby Architecture",
-                skill_id: undefined, // GAP P1-2: Dropped skill_id
+                skill_id: "sk-tax-042",
                 expected_level: 3,
             })
         );

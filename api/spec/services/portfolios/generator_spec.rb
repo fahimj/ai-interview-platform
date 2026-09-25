@@ -15,12 +15,20 @@ RSpec.describe Portfolios::Generator do
           'skill_id' => 'sk-1',
           'skill_label' => 'Ruby on Rails',
           'level' => 3,
-          'confidence' => 'high',
+          'confidence' => 'High',
           'evidence' => ['Built REST APIs with ActiveRecord'],
           'competency_summary' => 'Solid mid-level understanding.'
         }
       ],
-      'discovered_skills' => []
+      'discovered_skills' => [
+        {
+          'skill_label' => 'Docker',
+          'level' => 4,
+          'confidence' => ' Medium ',
+          'evidence' => ['Configured compose files'],
+          'competency_summary' => 'Good container knowledge.'
+        }
+      ]
     }.to_json
   end
 
@@ -33,12 +41,17 @@ RSpec.describe Portfolios::Generator do
     portfolio = generator.call
 
     expect(portfolio.generation_status).to eq('complete')
-    expect(portfolio.portfolio_skills.count).to eq(1)
+    expect(portfolio.portfolio_skills.count).to eq(2)
 
-    skill = portfolio.portfolio_skills.first
+    skill = portfolio.portfolio_skills.find_by(skill_id: 'sk-1')
     expect(skill.skill_id).to eq('sk-1')
     expect(skill.ai_level).to eq(3)
     expect(skill.ai_confidence).to eq('high')
+
+    discovered = portfolio.portfolio_skills.find_by(skill_label: 'Docker')
+    expect(discovered.is_discovered).to be true
+    expect(discovered.ai_level).to eq(4)
+    expect(discovered.ai_confidence).to eq('medium')
   end
 
   it 'characterizes GAP P1-4: generator executes cleanly even when session transcript is completely empty' do

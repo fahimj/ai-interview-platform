@@ -47,23 +47,22 @@ describe("ComparisonTable Component Characterization", () => {
         expect(screen.getByText("✏")).toBeInTheDocument();
     });
 
-    it("characterizes GAP P1-1: renders blank Required column when API provides expected_level instead of required_level", () => {
-        // Current API engine emits expected_level, not required_level
+    it("renders Required column when API provides required_level (or expected_level)", () => {
         const apiFormattedComparisons = [
             {
                 skill_label: "Docker",
+                required_level: 3,
                 expected_level: 3,
                 candidate_level: 3,
                 result: "match",
                 delta: 0,
-            } as unknown as SkillComparison,
+            } as SkillComparison,
         ];
 
         const { container } = render(<ComparisonTable comparisons={apiFormattedComparisons} />);
 
-        // The Required column cell (index 1 in table row) is empty because c.required_level is undefined
         const row = container.querySelector("tbody tr");
         const requiredCell = row?.querySelectorAll("td")[1];
-        expect(requiredCell?.textContent?.trim()).toBe("");
+        expect(requiredCell?.textContent?.trim()).toBe("L3");
     });
 });
