@@ -74,8 +74,8 @@ module Gemini
       params = []
       # session_id/token query params are a mock-Gemini E2E seam. The real Gemini
       # endpoint rejects unknown query params (close code 1007), so only append
-      # them when the mock override is active (ENV['GEMINI_WS_URL'] is set).
-      if ENV['GEMINI_WS_URL'].present?
+      # them when the mock override is active and not targeting Google's real API.
+      if ENV['GEMINI_WS_URL'].present? && !target_url.include?('generativelanguage.googleapis.com')
         params << "session_id=#{@session_id}" if @session_id.present?
         params << "token=#{@token}" if @token.present?
       end

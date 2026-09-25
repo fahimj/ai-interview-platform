@@ -12,7 +12,7 @@ RSpec.describe 'db:seed:e2e rake task' do
     Rake::Task['db:seed:e2e'].reenable
   end
 
-  it 'seeds organization, assessment, vacancy, and 5 candidate sessions idempotently' do
+  it 'seeds organization, assessment, vacancy, and 6 candidate sessions idempotently' do
     expect { Rake::Task['db:seed:e2e'].invoke }.not_to raise_error
 
     org = Organization.find_by(scheme: 'e2e-corp')
@@ -34,6 +34,7 @@ RSpec.describe 'db:seed:e2e rake task' do
       e2e-token-consent-decline
       e2e-token-soft-bypass
       e2e-token-live-gemini
+      e2e-token-model-validity
     ]
 
     sessions = Session.unscoped.where(tenant_id: org.id)
@@ -44,7 +45,7 @@ RSpec.describe 'db:seed:e2e rake task' do
     Rake::Task['db:seed:e2e'].reenable
     expect { Rake::Task['db:seed:e2e'].invoke }.not_to raise_error
 
-    expect(Session.unscoped.where(tenant_id: org.id).count).to eq(5)
+    expect(Session.unscoped.where(tenant_id: org.id).count).to eq(6)
     expect(Session.unscoped.where(tenant_id: org.id).pluck(:invite_token)).to match_array(expected_tokens)
   end
 end

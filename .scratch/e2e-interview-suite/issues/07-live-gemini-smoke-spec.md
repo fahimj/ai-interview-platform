@@ -1,6 +1,6 @@
 # 07-live-gemini-smoke-spec
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 05
 
 ## Context

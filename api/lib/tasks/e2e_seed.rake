@@ -50,6 +50,7 @@ namespace :db do
         e2e-token-consent-decline
         e2e-token-soft-bypass
         e2e-token-live-gemini
+        e2e-token-model-validity
       ].freeze
 
       # Clean up existing vacancies and fit-gap reports
@@ -227,7 +228,8 @@ namespace :db do
         { token: 'e2e-token-resumption', name: 'Dewi Lestari (Resumption)' },
         { token: 'e2e-token-consent-decline', name: 'Rian Hidayat (Consent Decline)' },
         { token: 'e2e-token-soft-bypass', name: 'Siti Nurhaliza (Soft Bypass)' },
-        { token: 'e2e-token-live-gemini', name: 'Agus Setiawan (Live Gemini)' }
+        { token: 'e2e-token-live-gemini', name: 'Agus Setiawan (Live Gemini)' },
+        { token: 'e2e-token-model-validity', name: 'Maya Putri (Model Validity)' }
       ]
 
       candidate_scenarios.each_with_index do |scenario, idx|

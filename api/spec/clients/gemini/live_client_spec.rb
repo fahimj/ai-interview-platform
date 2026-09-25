@@ -82,5 +82,31 @@ RSpec.describe Gemini::LiveClient do
         )
       end
     end
+
+    context 'when GEMINI_WS_URL is overridden with the production Google endpoint' do
+      around do |example|
+        old_val = ENV['GEMINI_WS_URL']
+        ENV['GEMINI_WS_URL'] = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent'
+        example.run
+      ensure
+        ENV['GEMINI_WS_URL'] = old_val
+      end
+
+      it 'does NOT append session_id or token query params' do
+        client = described_class.new(
+          system_prompt: system_prompt,
+          session_id: 'e2e-session-123',
+          token: 'e2e-token-live-gemini',
+          api_key: 'test-key'
+        )
+        client.connect
+
+        expect(Faye::WebSocket::Client).to have_received(:new).with(
+          ENV['GEMINI_WS_URL'],
+          nil,
+          headers: { 'x-goog-api-key' => 'test-key' }
+        )
+      end
+    end
   end
 end

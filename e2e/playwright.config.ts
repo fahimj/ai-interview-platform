@@ -5,11 +5,15 @@ import { defineConfig, devices } from '@playwright/test';
 // Without it, tests run against the deterministic mock server.
 const LIVE_GEMINI = !!process.env.GEMINI_API_KEY;
 
+const GOOGLE_GEMINI_WS_URL =
+  'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
+
 const railsAudioEnv: Record<string, string> = {
   OBJC_DISABLE_INITIALIZE_FORK_SAFETY: 'YES',
   ...(LIVE_GEMINI
     ? {
         GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
+        GEMINI_WS_URL: process.env.GEMINI_WS_URL || GOOGLE_GEMINI_WS_URL,
         ...(process.env.GEMINI_LIVE_MODEL ? { GEMINI_LIVE_MODEL: process.env.GEMINI_LIVE_MODEL } : {}),
       }
     : { GEMINI_WS_URL: 'ws://localhost:8080' }),

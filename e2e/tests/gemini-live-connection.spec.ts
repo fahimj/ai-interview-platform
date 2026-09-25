@@ -16,7 +16,7 @@ test.describe('Gemini Live connection', () => {
   test.setTimeout(120_000);
 
   test('AI greeting appears when the live model is supported', async ({ page }) => {
-    await page.goto('/interview/e2e-token-happy-path');
+    await page.goto('/interview/e2e-token-model-validity');
 
     // ─── Accept consent ────────────────────────────────────────────────────
     await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
