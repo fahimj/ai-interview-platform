@@ -16,7 +16,21 @@ async function globalSetup() {
       RAILS_ENV: 'test',
     },
   });
-  console.log('[E2E Global Setup] Database seeded successfully.');
+
+  try {
+    execSync('RAILS_ENV=development bundle exec rails db:seed:e2e', {
+      cwd: apiDir,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        RAILS_ENV: 'development',
+      },
+    });
+  } catch (e) {
+    console.warn('[E2E Global Setup] Warning: could not seed development db:', e);
+  }
+
+  console.log('[E2E Global Setup] Databases seeded successfully.');
 }
 
 export default globalSetup;

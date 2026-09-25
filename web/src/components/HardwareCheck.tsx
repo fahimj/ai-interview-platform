@@ -122,6 +122,9 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
             const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
             const ctx = new AudioCtx();
             monitorAudioCtxRef.current = ctx;
+            if (ctx.state === "suspended") {
+                ctx.resume().catch(() => {});
+            }
             const source = ctx.createMediaStreamSource(stream);
             const analyser = ctx.createAnalyser();
             analyser.fftSize = 256;
@@ -129,7 +132,9 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
             const data = new Uint8Array(analyser.frequencyBinCount);
             const update = () => {
                 analyser.getByteFrequencyData(data);
-                setAudioLevel(Math.round(data.reduce((a, b) => a + b, 0) / data.length));
+                const max = Math.max(...data);
+                const avg = data.reduce((a, b) => a + b, 0) / data.length;
+                setAudioLevel(Math.round(Math.max(avg, max > 0 ? max / 4 : 0)));
                 rafIdRef.current = requestAnimationFrame(update);
             };
             rafIdRef.current = requestAnimationFrame(update);
@@ -237,7 +242,7 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
     });
 
     return (
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="rounded-lg border bg-card overflow-hidden" data-testid="hardware-check">
             {/* Camera preview */}
             {REQUIRE_CAMERA && <div className="relative bg-black aspect-video">
                 {videoStream ? (
@@ -306,10 +311,11 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                                         type="button"
                                         variant="outline"
                                         size="sm"
+                                        data-testid="soft-bypass-button"
                                         className="h-7 text-xs border-amber-300 bg-white hover:bg-amber-100 text-amber-900 shrink-0"
                                         onClick={() => setSoftBypass(true)}
                                     >
-                                        Proceed anyway
+                                        Proceed anyway (Soft Bypass)
                                     </Button>
                                 ) : (
                                     <span className="text-xs font-semibold text-green-700 shrink-0">
@@ -321,14 +327,14 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
 
                         {/* Mic level bar */}
                         {key === "microphone" && progress.microphone === ProctoringState.PASSED && (
-                            <div className="mt-2 flex items-center gap-2">
+                            <div className="mt-2 flex items-center gap-2" data-testid="mic-visualizer">
                                 <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
                                     <div
                                         className="h-full bg-green-500 transition-all duration-150"
                                         style={{ width: `${Math.min(audioLevel * 2, 100)}%` }}
                                     />
                                 </div>
-                                <span className="text-xs text-muted-foreground w-8 text-right">{audioLevel}</span>
+                                <span className="text-xs text-muted-foreground w-8 text-right" data-testid="mic-level">{audioLevel}</span>
                             </div>
                         )}
                     </div>
@@ -347,12 +353,13 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                     size="sm"
                     className="ml-auto"
                     disabled={!allPassed}
+                    data-testid="start-interview-button"
                     onClick={() => {
                         stopAllMediaTracksAndContexts();
                         onStart?.();
                     }}
                 >
-                    Start Interview
+                    Mulai Wawancara / Start Interview
                 </Button>
             </div>
         </div>

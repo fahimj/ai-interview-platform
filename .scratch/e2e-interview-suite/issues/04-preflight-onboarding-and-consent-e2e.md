@@ -1,6 +1,6 @@
 # 04-preflight-onboarding-and-consent-e2e
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 01, 03
 
 ## Context
@@ -25,3 +25,11 @@ Candidates entering an interview must navigate the statutory Pre-Flight Consent 
 
 ## Verification
 - `cd e2e && npx playwright test tests/onboarding.spec.ts`
+
+## Comments
+- Implemented `e2e/tests/onboarding.spec.ts` covering both UU PDP Consent Opt-Out (clean termination, zero GUM access) and Affirmative Consent + Hardware Check + Soft Bypass + user gesture audio context activation.
+- Updated `PreFlightConsentModal.tsx` button label to "Saya Setuju" for parity with legal disclosures and E2E specifications while maintaining backwards compatibility with Vitest suites.
+- Enhanced `HardwareCheck.tsx` with `data-testid` selectors, AudioContext resume handling, audio peak/average visualizer calculations, and bilingual labels for Soft Bypass and Start Interview.
+- Updated `useAudioCapture.ts` to resume suspended AudioContexts upon candidate gesture initialization per ADR 0005.
+- Updated `e2e/global-setup.ts` to seed both test and development databases to support seamless local runs against existing dev servers.
+- Verified: All 3 Playwright tests pass (onboarding + smoke), Vitest suite passes (17 tests), RSpec backend suite passes (29 examples), and TypeScript checks pass with zero errors in both `web/` and `e2e/`.

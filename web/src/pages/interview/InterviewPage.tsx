@@ -241,9 +241,9 @@ export default function InterviewPage() {
               <CheckCircle className="h-4 w-4 shrink-0" />
               <span>Hardware checks passed. You're ready to start.</span>
             </div>
-            <Button className="w-full" size="lg" onClick={startInterview}>
+            <Button className="w-full" size="lg" data-testid="start-interview-button" onClick={startInterview}>
               <Mic className="h-4 w-4 mr-2" />
-              Start Interview
+              Mulai Wawancara / Start Interview
             </Button>
           </div>
         )}

@@ -91,7 +91,7 @@ export const PreFlightConsentModal: React.FC<PreFlightConsentModalProps> = ({
             onClick={onConsent}
             className="ml-auto"
           >
-            Saya Menyetujui
+            Saya Setuju
           </Button>
         </DialogFooter>
       </DialogContent>
