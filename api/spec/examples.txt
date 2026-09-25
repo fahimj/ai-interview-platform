@@ -1,3 +1,45 @@
-example_id                         | status | run_time        |
----------------------------------- | ------ | --------------- |
-./spec/harness_sanity_spec.rb[1:1] | passed | 0.23453 seconds |
+example_id                                           | status | run_time        |
+---------------------------------------------------- | ------ | --------------- |
+./spec/clients/gemini/http_client_spec.rb[1:1:1]     | passed | 0.00031 seconds |
+./spec/clients/gemini/http_client_spec.rb[1:1:2]     | passed | 0.00104 seconds |
+./spec/clients/gemini/http_client_spec.rb[1:2:1]     | passed | 0.00712 seconds |
+./spec/clients/gemini/live_client_spec.rb[1:1:1]     | passed | 0.00273 seconds |
+./spec/clients/gemini/live_client_spec.rb[1:2:1:1]   | passed | 0.00111 seconds |
+./spec/clients/gemini/live_client_spec.rb[1:2:2:1]   | passed | 0.00101 seconds |
+./spec/clients/gemini/live_client_spec.rb[1:2:3:1]   | passed | 0.00099 seconds |
+./spec/clients/gemini/live_client_spec.rb[1:2:3:2]   | passed | 0.00116 seconds |
+./spec/clients/gemini/live_client_spec.rb[1:2:4:1]   | passed | 0.00131 seconds |
+./spec/models/session_spec.rb[1:1]                   | passed | 0.003 seconds   |
+./spec/models/session_spec.rb[1:2]                   | passed | 0.00286 seconds |
+./spec/models/session_spec.rb[1:3:1]                 | passed | 0.00923 seconds |
+./spec/models/session_spec.rb[1:3:2]                 | passed | 0.00306 seconds |
+./spec/models/user_spec.rb[1:1:1]                    | passed | 0.00035 seconds |
+./spec/models/user_spec.rb[1:2:1]                    | passed | 0.00989 seconds |
+./spec/models/user_spec.rb[1:3:1]                    | passed | 0.00352 seconds |
+./spec/models/user_spec.rb[1:3:2]                    | passed | 0.00216 seconds |
+./spec/models/user_spec.rb[1:3:3]                    | passed | 0.00196 seconds |
+./spec/models/user_spec.rb[1:3:4]                    | passed | 0.11778 seconds |
+./spec/models/user_spec.rb[1:3:5]                    | passed | 0.00381 seconds |
+./spec/requests/api/v1/assessments_spec.rb[1:1:1]    | passed | 0.0701 seconds  |
+./spec/requests/api/v1/assessments_spec.rb[1:1:2]    | passed | 0.07954 seconds |
+./spec/requests/api/v1/assessments_spec.rb[1:1:3]    | passed | 0.07424 seconds |
+./spec/requests/api/v1/authentication_spec.rb[1:1:1] | passed | 0.114 seconds   |
+./spec/requests/api/v1/authentication_spec.rb[1:1:2] | passed | 0.22912 seconds |
+./spec/requests/api/v1/authentication_spec.rb[1:1:3] | passed | 0.07523 seconds |
+./spec/requests/api/v1/authentication_spec.rb[1:1:4] | passed | 0.07272 seconds |
+./spec/requests/api/v1/authentication_spec.rb[1:1:5] | passed | 0.06958 seconds |
+./spec/requests/api/v1/authentication_spec.rb[1:1:6] | passed | 0.07562 seconds |
+./spec/requests/api/v1/authentication_spec.rb[1:1:7] | passed | 0.13096 seconds |
+./spec/requests/api/v1/sessions_spec.rb[1:1:1]       | passed | 0.07812 seconds |
+./spec/requests/api/v1/sessions_spec.rb[1:1:2]       | passed | 0.07467 seconds |
+./spec/requests/api/v1/sessions_spec.rb[1:2:1]       | passed | 0.10335 seconds |
+./spec/requests/api/v1/sessions_spec.rb[1:2:2]       | passed | 0.06912 seconds |
+./spec/requests/api/v1/sessions_spec.rb[1:2:3]       | passed | 0.0898 seconds  |
+./spec/requests/api/v1/sessions_spec.rb[1:2:4]       | passed | 0.07026 seconds |
+./spec/requests/api/v1/tenant_scoping_spec.rb[1:1:1] | passed | 0.08687 seconds |
+./spec/services/fit_gap/engine_spec.rb[1:1]          | passed | 0.01552 seconds |
+./spec/services/fit_gap/engine_spec.rb[1:2]          | passed | 0.00978 seconds |
+./spec/services/fit_gap/engine_spec.rb[1:3]          | passed | 0.01008 seconds |
+./spec/services/portfolios/generator_spec.rb[1:1]    | passed | 0.00766 seconds |
+./spec/services/portfolios/generator_spec.rb[1:2]    | passed | 0.01203 seconds |
+./spec/tasks/e2e_seed_spec.rb[1:1]                   | passed | 0.07695 seconds |
