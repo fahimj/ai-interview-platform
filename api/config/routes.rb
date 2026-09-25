@@ -57,7 +57,7 @@ Rails.application.routes.draw do
       resources :vacancies
 
       # Portfolios — fit/gap and export
-      resources :portfolios, only: [] do
+      resources :portfolios, only: %i[show] do
         member do
           post :fitgap
           post :regenerate_fitgap
