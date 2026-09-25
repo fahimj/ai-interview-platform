@@ -1,6 +1,6 @@
 # 03-backend-gemini-ws-seam-and-e2e-seeds
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: none
 
 ## Context
@@ -27,3 +27,10 @@ Rails currently hardcodes `GEMINI_WS_URL = 'wss://generativelanguage.googleapis.
 ## Verification
 - `cd api && RAILS_ENV=test bundle exec rails db:seed:e2e`
 - Verify database contains sessions for all 5 scenario tokens.
+
+## Comments
+- Updated `api/app/clients/gemini/live_client.rb` to fetch `GEMINI_WS_URL` from ENV with production default, support `session_id` and `token` parameters, and dynamically append query parameters on `#connect`.
+- Updated `api/app/channels/audio_websocket_middleware.rb` to pass `session_id: session.id` and `token: session.invite_token` when instantiating `Gemini::LiveClient`.
+- Implemented `api/lib/tasks/e2e_seed.rake` providing `rails db:seed:e2e` that idempotently resets and seeds `e2e-corp` organization, assessment, technical vacancy with standardized B7 competencies, and all 5 scenario candidate sessions in `pending` status.
+- Created `e2e/global-setup.ts` and wired `globalSetup` and `GEMINI_WS_URL: 'ws://localhost:8080'` in `e2e/playwright.config.ts`.
+- Verified via unit test suites (`live_client_spec.rb`, `e2e_seed_spec.rb`), full backend suite (29 examples, 0 failures), web Vitest suite (17 passed), and Playwright smoke execution with automated global seeding.
