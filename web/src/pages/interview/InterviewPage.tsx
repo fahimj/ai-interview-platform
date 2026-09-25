@@ -128,7 +128,15 @@ export default function InterviewPage() {
     setTranscript((prev) => [...prev.slice(-9), turn]); // keep last 10
   }, []);
 
-  const { playChunk, stop: stopPlayback, scheduleAfterPlayback, waitForDrain, cancelDrain, init: initPlayback } = useAudioPlayback();
+  const {
+    playChunk,
+    stop: stopPlayback,
+    scheduleAfterPlayback,
+    waitForDrain,
+    cancelDrain,
+    init: initPlayback,
+    analyserNode: playbackAnalyser,
+  } = useAudioPlayback();
   const audioCompleteCalledRef = useRef(false);
   const audioCompleteSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -176,7 +184,13 @@ export default function InterviewPage() {
     onResumptionToken: handleResumptionToken,
   });
 
-  const { start: startCapture, stop: stopCapture, mute, unmute } = useAudioCapture({
+  const {
+    start: startCapture,
+    stop: stopCapture,
+    mute,
+    unmute,
+    analyserNode: captureAnalyser,
+  } = useAudioCapture({
     onFrame: send,
   });
 
@@ -365,7 +379,7 @@ export default function InterviewPage() {
           <div className="text-sm text-muted-foreground animate-pulse">Connecting...</div>
         ) : interviewState === "draining_audio" ? (
           <div className="flex flex-col items-center gap-2 text-center">
-            <VoiceBars active={true} label="AI speaking" variant="ai" />
+            <VoiceBars active={true} label="AI speaking" variant="ai" analyserNode={playbackAnalyser} />
             <p className="text-xs text-muted-foreground">Wrapping up...</p>
           </div>
         ) : (
@@ -374,6 +388,7 @@ export default function InterviewPage() {
               active={aiSpeaking}
               label={aiSpeaking ? "AI speaking" : "Listening..."}
               variant="ai"
+              analyserNode={playbackAnalyser}
             />
 
             {candidateSpeaking && (
@@ -381,6 +396,7 @@ export default function InterviewPage() {
                 active={true}
                 label="You're speaking"
                 variant="candidate"
+                analyserNode={captureAnalyser}
               />
             )}
 
