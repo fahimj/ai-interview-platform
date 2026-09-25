@@ -164,6 +164,9 @@ export interface CandidateInfo {
   role_title: string;
   time_limit_min: number;
   session_status: string;
+  resumption_token?: string | null;
+  turns?: Array<{ speaker: "candidate" | "ai" | "assessor" | "system"; text: string; turn_number?: number }>;
+  turn_count?: number;
 }
 
 export interface PaginationMeta {
@@ -194,6 +197,8 @@ export interface WsControlMessage {
     | "transcription"
     | "reconnecting"
     | "reconnected"
+    | "session_resumed"
+    | "session_resumption"
     | "speaker_changed"
     | "preparing_to_end"
     | "error";
@@ -203,5 +208,7 @@ export interface WsControlMessage {
   reason?: string;
   code?: string;
   message?: string;
+  token?: string;
+  resumed?: boolean;
   recoverable?: boolean;
 }

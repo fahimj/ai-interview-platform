@@ -1,6 +1,6 @@
 # 06-network-disconnect-and-session-resumption-e2e
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 05
 
 ## Context
@@ -26,3 +26,7 @@ Candidates on unreliable regional internet connections frequently experience pag
 
 ## Verification
 - `cd e2e && npx playwright test tests/resumption.spec.ts`
+- Verified: All assertions passed in 16.5s.
+- Verified backend suite: `cd api && bundle exec rspec` (29 examples, 0 failures).
+- Verified web unit/integration suite: `cd web && npm test` (17 tests, 0 failures).
+- Verified TypeScript compilation: `tsc --noEmit` cleanly in `web/` and `e2e/`.

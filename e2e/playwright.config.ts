@@ -5,12 +5,15 @@ import { defineConfig, devices } from '@playwright/test';
 // Without it, tests run against the deterministic mock server.
 const LIVE_GEMINI = !!process.env.GEMINI_API_KEY;
 
-const railsAudioEnv: Record<string, string> = LIVE_GEMINI
-  ? {
-      GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
-      ...(process.env.GEMINI_LIVE_MODEL ? { GEMINI_LIVE_MODEL: process.env.GEMINI_LIVE_MODEL } : {}),
-    }
-  : { GEMINI_WS_URL: 'ws://localhost:8080' };
+const railsAudioEnv: Record<string, string> = {
+  OBJC_DISABLE_INITIALIZE_FORK_SAFETY: 'YES',
+  ...(LIVE_GEMINI
+    ? {
+        GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
+        ...(process.env.GEMINI_LIVE_MODEL ? { GEMINI_LIVE_MODEL: process.env.GEMINI_LIVE_MODEL } : {}),
+      }
+    : { GEMINI_WS_URL: 'ws://localhost:8080' }),
+};
 
 export default defineConfig({
   testDir: './tests',
