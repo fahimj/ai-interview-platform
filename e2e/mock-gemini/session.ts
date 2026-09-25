@@ -5,6 +5,11 @@ import type { Scenario, GeminiSetupMessage, GeminiRealtimeInputMessage, GeminiSe
 // Track sessions that have undergone simulated socket drops across reconnections
 export const droppedSessions = new Set<string>();
 
+// The models real Gemini Live accepts for bidiGenerateContent. The deprecated
+// gemini-2.0-flash-live-001 (and other retired Live API models) are rejected
+// with close code 1008, mirroring the real endpoint.
+const SUPPORTED_LIVE_MODELS = ['models/gemini-3.1-flash-live-preview'];
+
 export class MockGeminiSession {
   public readonly id: string;
   public readonly scenario: Scenario;
@@ -63,6 +68,19 @@ export class MockGeminiSession {
   }
 
   private handleSetup(msg: GeminiSetupMessage) {
+    // Faithful to real Gemini Live: reject deprecated/unsupported models with
+    // close code 1008 before the session is established (mirrors the real
+    // "models/gemini-2.0-flash-live-001 is not found ... bidiGenerateContent").
+    const model = msg.setup.model;
+    if (model && !SUPPORTED_LIVE_MODELS.includes(model)) {
+      console.warn(`[Mock Gemini] Rejecting unsupported model ${model} (code 1008)`);
+      this.ws.close(
+        1008,
+        `${model} is not found for API version v1beta, or is not supported for bidiGenerateContent.`
+      );
+      return;
+    }
+
     const handle = msg.setup.sessionResumption?.handle;
     if (handle) {
       this.isResumed = true;

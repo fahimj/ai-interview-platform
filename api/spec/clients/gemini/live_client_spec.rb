@@ -33,14 +33,13 @@ RSpec.describe Gemini::LiveClient do
       end
     end
 
-    context 'when session_id is provided' do
-      it 'appends ?session_id=<session_id> to the URL' do
+    context 'when session_id is provided (real endpoint, no mock override)' do
+      it 'does NOT append session_id — the real Gemini endpoint rejects it' do
         client = described_class.new(system_prompt: system_prompt, session_id: '42', api_key: 'test-key')
         client.connect
 
-        expected_url = "#{described_class::GEMINI_WS_URL}?session_id=42"
         expect(Faye::WebSocket::Client).to have_received(:new).with(
-          expected_url,
+          described_class::GEMINI_WS_URL,
           nil,
           headers: { 'x-goog-api-key' => 'test-key' }
         )

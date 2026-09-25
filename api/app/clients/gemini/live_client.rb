@@ -72,8 +72,13 @@ module Gemini
       @setup_complete = false
       target_url = ENV.fetch('GEMINI_WS_URL', GEMINI_WS_URL)
       params = []
-      params << "session_id=#{@session_id}" if @session_id.present?
-      params << "token=#{@token}" if @token.present?
+      # session_id/token query params are a mock-Gemini E2E seam. The real Gemini
+      # endpoint rejects unknown query params (close code 1007), so only append
+      # them when the mock override is active (ENV['GEMINI_WS_URL'] is set).
+      if ENV['GEMINI_WS_URL'].present?
+        params << "session_id=#{@session_id}" if @session_id.present?
+        params << "token=#{@token}" if @token.present?
+      end
 
       if params.any?
         separator = target_url.include?('?') ? '&' : '?'

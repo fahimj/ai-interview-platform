@@ -115,6 +115,25 @@ test('Gemini protocol setup handshake responds with setupComplete and sessionRes
   ws.close();
 });
 
+test('Rejects deprecated live models with close code 1008 (mirrors real Gemini)', async () => {
+  const ws = new WebSocket(`${WS_BASE}/ws?session_id=e2e-token-happy-path`);
+
+  await new Promise<void>((resolve) => ws.once('open', () => resolve()));
+
+  // Setup with the retired model real Gemini no longer serves for bidiGenerateContent.
+  ws.send(JSON.stringify({
+    setup: {
+      model: 'models/gemini-2.0-flash-live-001',
+      sessionResumption: {},
+    },
+  }));
+
+  const { code, reason } = await waitForClose(ws);
+  assert.equal(code, 1008, 'Expected close code 1008 for unsupported model');
+  assert.match(reason, /gemini-2\.0-flash-live-001/);
+  assert.match(reason, /not found for API version v1beta|not supported for bidiGenerateContent/);
+});
+
 test('Happy Path: greeting -> candidate PCM -> follow-up question -> wrap-up signal -> clean close', async () => {
   const ws = new WebSocket(`${WS_BASE}/ws?session_id=e2e-token-happy-path`);
   const collector = new MessageCollector(ws);
