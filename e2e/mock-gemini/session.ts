@@ -178,7 +178,7 @@ export class MockGeminiSession {
         },
       });
 
-      // 3. Emit Model Follow-up Turn
+      // 3. Emit Model Follow-up Turn (give conversational cadence window)
       setTimeout(() => {
         if (this.disposed || !this.isOpen()) return;
         this.sendModelTurn(
@@ -190,7 +190,7 @@ export class MockGeminiSession {
             this.candidateTurnStart = 0;
           }
         );
-      }, 100);
+      }, 1500);
     } else if (this.turnState === 'WAITING_CANDIDATE_2') {
       this.turnState = 'SPEAKING_CLOSING';
 

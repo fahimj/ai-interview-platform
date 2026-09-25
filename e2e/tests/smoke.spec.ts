@@ -2,8 +2,8 @@ import { test, expect } from '../fixtures';
 
 test.describe('E2E Environment Smoke Test', () => {
   test('launches Chromium and grants microphone permissions without prompts', async ({ page }) => {
-    // Navigate to base URL to ensure Vite web server is responsive
-    await page.goto('/');
+    // Navigate to /login to ensure Vite web server is responsive and page is stable
+    await page.goto('/login');
 
     // Verify microphone permission state query returns granted
     const permissionStatus = await page.evaluate(async () => {

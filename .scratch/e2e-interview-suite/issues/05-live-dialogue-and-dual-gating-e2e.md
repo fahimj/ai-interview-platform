@@ -1,6 +1,6 @@
 # 05-live-dialogue-and-dual-gating-e2e
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 01, 02, 03, 04
 
 ## Context

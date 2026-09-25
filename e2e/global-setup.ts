@@ -30,6 +30,13 @@ async function globalSetup() {
     console.warn('[E2E Global Setup] Warning: could not seed development db:', e);
   }
 
+  try {
+    await fetch('http://localhost:8080/api/reset', { method: 'POST' });
+    console.log('[E2E Global Setup] Mock Gemini reset successfully.');
+  } catch (e) {
+    // mock gemini may not be started yet if managed by playwright webServer
+  }
+
   console.log('[E2E Global Setup] Databases seeded successfully.');
 }
 
