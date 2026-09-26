@@ -3,7 +3,7 @@
 require 'faye/websocket'
 
 # Rack middleware that proxies a WebSocket at /ws/sessions/:id/audio between the browser (16kHz PCM)
-# and Gemini Live (24kHz PCM). Audio is buffered in a ring buffer for reconnection replay.
+# and Gemini Live (24kHz PCM). Reconnection resilience is handled via Gemini Live session resumption tokens.
 class AudioWebSocketMiddleware
   AUDIO_PATH_PATTERN = %r{\A/ws/sessions/([^/]+)/audio\z}
 

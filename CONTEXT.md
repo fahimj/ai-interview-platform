@@ -53,13 +53,25 @@ The policy that coverage states advance to covered strictly when Gemini observes
 _Avoid_: Auto-advance, probe threshold promotion, timeout promotion
 
 **Tenant-Bound User**:
-A user authenticated with a mandatory server-resolved organization binding, preventing cross-tenant scheme spoofing.
+The user authenticated with a mandatory server-resolved organization binding, preventing cross-tenant scheme spoofing.
 _Avoid_: Header-scoped user, dynamic tenant user
 
 **Gated Audio-Reactive Visualizer**:
 A real-time voice meter that animates speaking indicators directly from Web Audio analysis while isolating candidate monitoring behind a gain gate during software mute to prevent acoustic feedback bleed.
 _Avoid_: Audio wave, sound meter, volume bar
 
+**Talent Supply Agency Model**:
+The business architecture where Rakamin acts as the talent supplier evaluating candidates on behalf of client organizations (tenants) seeking technical hires.
+_Avoid_: B2C candidate portal, open job board
 
+**Client Tenant**:
+A specific client company (Organization) evaluating candidates for its open vacancies, completely query- and cryptographically-isolated from other tenant workspaces.
+_Avoid_: Workspace, team, sub-account
 
+**Super Admin**:
+A platform operator from Rakamin (`role: 'admin'`) with cross-tenant provisioning privileges to create client organizations and configure system rubrics.
+_Avoid_: Root user, global admin
 
+**Tenant Admin**:
+A client-side company user (`role: 'assessor'`) representing assessors, recruiters, or hiring managers, strictly scoped to manage vacancies, review candidate dossiers, and submit evaluative overrides within their organization.
+_Avoid_: Client user, standard user, evaluator

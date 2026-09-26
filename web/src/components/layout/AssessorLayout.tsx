@@ -1,22 +1,29 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tenantAtom } from "@/stores/tenantAtom";
-import { authAtom, clearToken } from "@/stores/authAtom";
+import { authAtom, clearToken, isSuperAdmin } from "@/stores/authAtom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ClipboardList, Briefcase, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Briefcase, LogOut, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 
-const navItems = [
+const baseNavItems = [
   { href: "/assessments", label: "Assessments", icon: ClipboardList },
   { href: "/vacancies", label: "Vacancies", icon: Briefcase },
 ];
 
 export default function AssessorLayout() {
   const tenant = useAtomValue(tenantAtom);
+  const auth = useAtomValue(authAtom);
   const setAuth = useSetAtom(authAtom);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isSuper = isSuperAdmin(auth.token);
+  const navItems = [
+    ...baseNavItems,
+    ...(isSuper ? [{ href: "/admin/users", label: "Admin", icon: ShieldCheck }] : []),
+  ];
 
   const handleLogout = () => {
     clearToken();

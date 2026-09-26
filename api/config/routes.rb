@@ -13,6 +13,13 @@ Rails.application.routes.draw do
     namespace :v1 do
       # Auth
       post 'auth/login', to: 'authentication#authenticate'
+
+      # Admin management (super admin only)
+      namespace :admin do
+        resources :users, only: %i[index create]
+        resources :organizations, only: %i[index create]
+      end
+
       # Health check
       get  'health', to: proc { [200, {}, [{ status: 'ok' }.to_json]] }
 
