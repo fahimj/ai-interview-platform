@@ -159,7 +159,7 @@ module Portfolios
           skill_label:        skill_data['skill_label'],
           is_discovered:      false,
           ai_level:           skill_data['level'].to_i.clamp(1, 5),
-          ai_confidence:      skill_data['confidence'],
+          ai_confidence:      skill_data['confidence'].to_s.downcase.strip,
           evidence:           Array(skill_data['evidence']).first(3),
           competency_summary: skill_data['competency_summary']
         )
@@ -171,7 +171,7 @@ module Portfolios
           skill_label:        skill_data['skill_label'],
           is_discovered:      true,
           ai_level:           skill_data['level'].to_i.clamp(1, 5),
-          ai_confidence:      skill_data['confidence'],
+          ai_confidence:      skill_data['confidence'].to_s.downcase.strip,
           evidence:           Array(skill_data['evidence']).first(3),
           competency_summary: skill_data['competency_summary']
         )
