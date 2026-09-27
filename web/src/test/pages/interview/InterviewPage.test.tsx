@@ -23,6 +23,7 @@ vi.mock("@/hooks/useAudioCapture", () => ({
         mute: vi.fn(),
         unmute: vi.fn(),
         volume: 0,
+        analyserNode: null,
     }),
 }));
 
@@ -35,6 +36,7 @@ vi.mock("@/hooks/useAudioPlayback", () => ({
         cancelDrain: vi.fn(),
         init: vi.fn().mockResolvedValue(undefined),
         isPlaying: false,
+        analyserNode: null,
     }),
 }));
 
