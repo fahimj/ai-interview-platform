@@ -20,32 +20,17 @@ describe("API Service Interceptors Characterization", () => {
         expect(config.headers.Authorization).toBe("Bearer test-jwt-token");
     });
 
-    it("characterizes GAP P3-2: unwraps response when enveloped in { data: ... }", () => {
+    it("passes through response data unchanged without arbitrary unwrapping", () => {
         const responseHandler = (api.interceptors.response as any).handlers[0].fulfilled;
 
-        const envelopedResponse = {
-            data: {
-                data: {
-                    user: { id: 1, name: "Admin" },
-                },
-            },
-        } as any;
-
-        const result = responseHandler(envelopedResponse);
-        expect(result.data).toEqual({ user: { id: 1, name: "Admin" } });
-    });
-
-    it("characterizes GAP P3-2: leaves payload unchanged when backend returns bare keys", () => {
-        const responseHandler = (api.interceptors.response as any).handlers[0].fulfilled;
-
-        const bareResponse = {
+        const response = {
             data: {
                 token: "jwt-xyz",
                 user: { id: 1, email: "admin@test.com" },
             },
         } as any;
 
-        const result = responseHandler(bareResponse);
+        const result = responseHandler(response);
         expect(result.data).toEqual({
             token: "jwt-xyz",
             user: { id: 1, email: "admin@test.com" },

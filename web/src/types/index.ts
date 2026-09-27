@@ -112,6 +112,9 @@ export interface Vacancy {
   culture_dimensions: string;
   competency_expectations: string;
   created_by?: number;
+  tenant_id?: number;
+  organization_name?: string;
+  organization_scheme?: string;
   created_at?: string;
   updated_at?: string;
   skills: VacancySkill[];

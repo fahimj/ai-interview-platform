@@ -62,4 +62,27 @@ RSpec.describe Portfolios::Generator do
 
     expect(portfolio.generation_status).to eq('complete')
   end
+
+  context 'when LLM generation encounters an error' do
+    it 'records generation_error and re-raises while keeping generation_status generating for retryability' do
+      allow(mock_gemini).to receive(:generate_content).and_raise(Gemini::HttpClient::RateLimitError.new('Rate limited'))
+      generator = described_class.new(session: session_record, gemini_client: mock_gemini)
+
+      expect { generator.call }.to raise_error(Gemini::HttpClient::RateLimitError, 'Rate limited')
+
+      portfolio = session_record.reload.portfolio
+      expect(portfolio.generation_status).to eq('generating')
+      expect(portfolio.generation_error).to eq('Rate limited')
+    end
+
+    it 'clears generation_error on subsequent successful generation' do
+      create(:portfolio, session: session_record, candidate_id: session_record.candidate_id, generation_status: 'generating', generation_error: 'Previous attempt failed')
+      generator = described_class.new(session: session_record, gemini_client: mock_gemini)
+
+      result = generator.call
+
+      expect(result.generation_status).to eq('complete')
+      expect(result.generation_error).to be_nil
+    end
+  end
 end

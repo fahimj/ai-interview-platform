@@ -26,12 +26,12 @@ module Portfolios
       response = @gemini_client.generate_content(prompt, temperature: 0.2)
 
       save_skills(portfolio, response)
-      portfolio.update!(generation_status: 'complete', generated_at: Time.current)
+      portfolio.update!(generation_status: 'complete', generation_error: nil, generated_at: Time.current)
 
       Rails.logger.info("[N10] Portfolio generated for session #{@session.id}")
       portfolio
     rescue => e
-      portfolio&.update!(generation_status: 'failed', generation_error: e.message)
+      portfolio&.update!(generation_error: e.message)
       Rails.logger.error("[N10] Portfolio generation failed for session #{@session.id}: #{e.class} #{e.message}")
       raise
     end

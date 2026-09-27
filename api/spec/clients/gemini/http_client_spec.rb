@@ -46,4 +46,49 @@ RSpec.describe Gemini::HttpClient do
       expect(result).to eq({ 'status' => 'ok' })
     end
   end
+
+  describe 'retry behavior on rate limits (429)' do
+    let(:stubs) { Faraday::Adapter::Test::Stubs.new }
+    let(:client) do
+      described_class.new(
+        model: model,
+        api_key: api_key,
+        adapter: :test,
+        adapter_options: stubs,
+        retry_options: { interval: 0, backoff_factor: 1 }
+      )
+    end
+    let(:endpoint_path) { "/v1beta/models/#{model}:generateContent" }
+
+    it 'retries POST requests on 429 and succeeds when a subsequent attempt succeeds' do
+      attempts = 0
+      stubs.post(endpoint_path) do
+        attempts += 1
+        if attempts == 1
+          [429, { 'Content-Type' => 'application/json', 'Retry-After' => '0' }, '{"error":{"message":"Rate limited"}}']
+        else
+          [200, { 'Content-Type' => 'application/json' }, '{"candidates":[{"content":{"parts":[{"text":"{\"result\":\"success\"}"}]}}]}']
+        end
+      end
+
+      result = client.generate_content('test prompt')
+
+      expect(attempts).to eq(2)
+      expect(result).to eq({ 'result' => 'success' })
+    end
+
+    it 'raises RateLimitError after exhausting retries' do
+      attempts = 0
+      stubs.post(endpoint_path) do
+        attempts += 1
+        [429, { 'Content-Type' => 'application/json', 'Retry-After' => '0' }, '{"error":{"message":"Rate limited"}}']
+      end
+
+      expect {
+        client.generate_content('test prompt')
+      }.to raise_error(Gemini::HttpClient::RateLimitError, 'Rate limited')
+
+      expect(attempts).to eq(4) # 1 initial + 3 retries
+    end
+  end
 end
