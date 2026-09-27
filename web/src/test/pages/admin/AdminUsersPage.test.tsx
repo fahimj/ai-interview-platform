@@ -184,8 +184,8 @@ describe("AdminUsersPage", () => {
     const newOrgBtn = screen.getByRole("button", { name: /New Organization/i });
     fireEvent.click(newOrgBtn);
 
-    expect(screen.getByText("Provision Client Organization")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Create Organization/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Organization Name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Tenant Scheme Identifier/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Organization Slug/i)).toBeInTheDocument();
   });
 });

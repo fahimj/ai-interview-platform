@@ -84,10 +84,10 @@ export default function CreateOrganizationModal({
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
-            Provision Client Organization
+            Create Organization
           </DialogTitle>
           <DialogDescription>
-            Register a new enterprise client tenant. This establishes the cryptographic and query isolation boundary for all client assessments.
+            Register a new client organization with an isolated workspace for their candidate assessments and team members.
           </DialogDescription>
         </DialogHeader>
 
@@ -106,36 +106,46 @@ export default function CreateOrganizationModal({
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               required
+              autoFocus
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="org-scheme">Tenant Scheme Identifier</Label>
-              <span className="text-xs text-muted-foreground">Used in JWT claims & schemas</span>
+              <Label htmlFor="org-scheme">Organization Slug</Label>
+              <span className="text-xs text-muted-foreground">Unique URL identifier</span>
             </div>
-            <Input
-              id="org-scheme"
-              placeholder="e.g. tokopedia"
-              value={scheme}
-              onChange={(e) => {
-                setIsSchemeManual(true);
-                setScheme(e.target.value);
-              }}
-              required
-              pattern="^[a-z0-9\-_]+$"
-              title="Only lowercase letters, numbers, hyphens, and underscores"
-            />
+            <div className="flex rounded-md shadow-sm">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted/60 text-muted-foreground text-xs font-mono select-none">
+                workspace/
+              </span>
+              <Input
+                id="org-scheme"
+                className="rounded-l-none font-mono text-sm"
+                placeholder="e.g. tokopedia"
+                value={scheme}
+                onChange={(e) => {
+                  setIsSchemeManual(true);
+                  setScheme(e.target.value);
+                }}
+                required
+                pattern="^[a-z0-9\-_]+$"
+                title="Only lowercase letters, numbers, hyphens, and underscores"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Auto-generated from name. Used for routing and logins.
+            </p>
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="org-host">Primary Host / Domain (Optional)</Label>
-              <span className="text-xs text-muted-foreground">Defaults to scheme.localhost</span>
+              <Label htmlFor="org-host">Custom Domain (Optional)</Label>
+              <span className="text-xs text-muted-foreground">Defaults to organization slug</span>
             </div>
             <Input
               id="org-host"
-              placeholder="e.g. tokopedia.com"
+              placeholder="e.g. interview.tokopedia.com"
               value={host}
               onChange={(e) => setHost(e.target.value)}
             />
