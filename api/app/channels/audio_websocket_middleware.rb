@@ -282,6 +282,11 @@ class AudioWebSocketMiddleware
     text = text.sub(/\A[\s\S]*?[\}\]]+[\s\}\]]*(?=\p{Lu})/m, '').strip
     text = text.gsub(/\[TIME[_ ]CONTROL[^\]]*\][^\n]*/m, '').strip
     text = text.gsub(/pacing=\S+\s*priority_next=\S*/m, '').strip
+    # Strips LLM self-planning / chain-of-thought prefixes like:
+    # "Pacing info: pacing=ahead. Keep probing skills. Current goal: probe further into node."
+    text = text.gsub(/\A\s*Pacing info:.*?(?:Current goal:[^\n]+(?:\n+|\s*)|\n\n)/mi, '').strip
+    text = text.gsub(/\A\s*Pacing info:[^\n]+(?:\n+|\s*)/mi, '').strip
+    text = text.gsub(/\A\s*Current goal:[^\n]+(?:\n+|\s*)/mi, '').strip
     text = text.gsub(/\[Start the interview[^\]]*\]/m, '').strip
     text = text.gsub(/\[SESSION RESUME\][^\n]*/m, '').strip
     text.gsub(/\[SISTEM\][^\n]*/m, '').strip
