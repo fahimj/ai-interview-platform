@@ -18,9 +18,16 @@ RSpec.describe Session, type: :model do
     expect(session.pending?).to be true
   end
 
-  it 'characterizes GAP P0-1: invite_url points to port 3001 (API host) instead of web frontend' do
-    session = create(:session, assessment: assessment, tenant_id: org.id)
-    # APP_BASE_URL default is http://localhost:3001
-    expect(session.invite_url).to eq("http://localhost:3001/interview/#{session.invite_token}")
+  describe '#invite_url' do
+    it 'resolves invite_url pointing to WEB_BASE_URL on port 5173 by default' do
+      session = create(:session, assessment: assessment, tenant_id: org.id)
+      expect(session.invite_url).to eq("http://localhost:5173/interview/#{session.invite_token}")
+    end
+
+    it 'respects custom WEB_BASE_URL environment variable' do
+      stub_const('ENV', ENV.to_hash.merge('WEB_BASE_URL' => 'https://app.example.com'))
+      session = create(:session, assessment: assessment, tenant_id: org.id)
+      expect(session.invite_url).to eq("https://app.example.com/interview/#{session.invite_token}")
+    end
   end
 end

@@ -3,6 +3,12 @@
 Rails.application.routes.draw do
   get '/health', to: proc { [200, {}, [{ status: 'ok' }.to_json]] }
 
+  # Fallback redirect for candidate invite links on API host
+  get '/interview/:token', to: redirect { |params, _req|
+    web_base = ENV.fetch('WEB_BASE_URL', 'http://localhost:5173')
+    "#{web_base}/interview/#{params[:token]}"
+  }
+
   namespace :api do
     namespace :v1 do
       # Auth
