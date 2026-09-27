@@ -41,9 +41,11 @@ describe("AssessorLayout Navigation Role Visibility", () => {
     expect(screen.getByRole("link", { name: /Assessments/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Vacancies/i })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Admin/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Tenant:/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Super Admin \(All Tenants\)/i)).not.toBeInTheDocument();
   });
 
-  it("renders Admin navigation link when token has role 'admin' (Super Admin)", () => {
+  it("renders Admin navigation link and Super Admin badge when token has role 'admin'", () => {
     // admin token: { role: 'admin', user_id: 1 }
     const adminPayload = btoa(JSON.stringify({ role: "admin", user_id: 1 }));
     const adminToken = `header.${adminPayload}.sig`;
@@ -55,5 +57,6 @@ describe("AssessorLayout Navigation Role Visibility", () => {
     const adminLink = screen.getByRole("link", { name: /Admin/i });
     expect(adminLink).toBeInTheDocument();
     expect(adminLink).toHaveAttribute("href", "/admin/users");
+    expect(screen.getByText(/Super Admin \(All Tenants\)/i)).toBeInTheDocument();
   });
 });

@@ -67,14 +67,21 @@ export default function AssessorLayout() {
             </nav>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {tenant.name && (
+            {isSuper ? (
+              <span
+                className="hidden sm:inline-block text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2.5 py-0.5"
+                title="Super Admin (All Tenants)"
+              >
+                Super Admin (All Tenants)
+              </span>
+            ) : tenant.name ? (
               <span
                 className="hidden sm:inline-block text-xs text-muted-foreground border rounded-full px-2.5 py-0.5 truncate max-w-[140px]"
                 title={`Tenant: ${tenant.name}`}
               >
                 Tenant: {tenant.name}
               </span>
-            )}
+            ) : null}
             <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2.5 sm:px-3" title="Logout">
               <LogOut className="h-4 w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">Logout</span>

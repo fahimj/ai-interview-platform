@@ -69,7 +69,7 @@ A specific client company (Organization) evaluating candidates for its open vaca
 _Avoid_: Workspace, team, sub-account
 
 **Super Admin**:
-A platform operator from Rakamin (`role: 'admin'`) with cross-tenant provisioning privileges to create client organizations and configure system rubrics.
+A platform operator from Rakamin (`role: 'admin'`) with cross-tenant privileges, unconstrained by tenant query scopes on reads while explicitly selecting client organizations during resource creation.
 _Avoid_: Root user, global admin
 
 **Tenant Admin**:
