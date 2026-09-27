@@ -56,7 +56,9 @@ class AudioWebSocketMiddleware
     end
 
     state.session = session
-    connect_to_gemini(browser_ws, state)
+    query = Rack::Utils.parse_nested_query(env['QUERY_STRING'])
+    resumption_token = query['resumption_token']
+    connect_to_gemini(browser_ws, state, resumption_handle: resumption_token)
   rescue StandardError => e
     Rails.logger.error("[AudioWS] Exception in on:open: #{e.class}: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
     browser_ws.close
@@ -99,7 +101,7 @@ class AudioWebSocketMiddleware
     schedule_graceful_end(browser_ws, state)
   end
 
-  def connect_to_gemini(browser_ws, state)
+  def connect_to_gemini(browser_ws, state, resumption_handle: nil)
     session = state.session
 
     ensure_system_prompt(session)
@@ -121,7 +123,8 @@ class AudioWebSocketMiddleware
     state.last_coverage_digest = injector.coverage_fingerprint
 
     build_gemini_client(browser_ws, state)
-    state.gemini_client.connect(resumption_handle: session.gemini_resumption_token.presence)
+    effective_token = resumption_handle.presence || session.gemini_resumption_token.presence
+    state.gemini_client.connect(resumption_handle: effective_token)
   end
 
   def ensure_system_prompt(session)
@@ -137,6 +140,8 @@ class AudioWebSocketMiddleware
     session = state.session
 
     state.gemini_client = Gemini::LiveClient.new(
+      session_id: session.id,
+      token: session.invite_token,
       system_prompt: session.assessment.system_prompt,
       on_audio: build_on_audio(browser_ws, state),
       on_input_transcription: build_on_input_transcription(browser_ws, state, session),
@@ -145,7 +150,7 @@ class AudioWebSocketMiddleware
       on_go_away: ->(time_left:, resumption_token:) { handle_go_away(browser_ws, state, resumption_token) },
       on_close: ->(code:, reason:) { handle_gemini_close(browser_ws, state, code: code, reason: reason) },
       on_error: ->(message) { Rails.logger.error("[AudioWS] Gemini error: session=#{session.id} #{message}") },
-      on_resumption_token_update: build_on_resumption_token_update(state, session),
+      on_resumption_token_update: build_on_resumption_token_update(browser_ws, state, session),
       on_ready: build_on_ready(browser_ws, state, session)
     )
   end
@@ -303,9 +308,10 @@ class AudioWebSocketMiddleware
   end
 
   # Debounce DB writes — Gemini rotates the token every turn but we only need it persisted as crash-recovery.
-  def build_on_resumption_token_update(state, session)
+  def build_on_resumption_token_update(browser_ws, state, session)
     lambda { |token|
       state.latest_resumption_token = token
+      send_json(browser_ws, type: 'session_resumption', token: token)
 
       now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       next if state.last_token_persisted_at && (now - state.last_token_persisted_at) < 60
@@ -330,13 +336,15 @@ class AudioWebSocketMiddleware
         state.reconnect_attempts = 0
         send_json(browser_ws, type: 'reconnected')
         send_json(browser_ws, type: 'speaker_changed', speaker: 'candidate')
+      elsif session.gemini_resumption_token.present?
+        Rails.logger.info("[AudioWS] Gemini resumed for session #{session.id}")
+        send_json(browser_ws, type: 'session_started', session_id: session.id, resumed: true)
+        send_json(browser_ws, type: 'speaker_changed', speaker: 'candidate')
       else
         Rails.logger.info("[AudioWS] Gemini ready — sending session_started for session #{session.id}")
-        unless session.gemini_resumption_token.present?
-          state.model_speaking = true
-          send_json(browser_ws, type: 'speaker_changed', speaker: 'ai')
-          state.gemini_client.trigger_opening
-        end
+        state.model_speaking = true
+        send_json(browser_ws, type: 'speaker_changed', speaker: 'ai')
+        state.gemini_client.trigger_opening
         send_json(browser_ws, type: 'session_started', session_id: session.id)
       end
 

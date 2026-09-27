@@ -25,6 +25,9 @@ export function useAudioCapture({ onFrame, onError }: UseAudioCaptureOptions) {
 
       const ctx = new AudioContext({ sampleRate: 16000 });
       audioCtxRef.current = ctx;
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
 
       await ctx.audioWorklet.addModule("/audio-worklet-processor.js");
 

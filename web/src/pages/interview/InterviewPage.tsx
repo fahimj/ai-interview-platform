@@ -42,6 +42,8 @@ export default function InterviewPage() {
   const [micMuted, setMicMuted] = useState(false);
   const micMutedRef = useRef(false);
 
+  const autoResumedRef = useRef(false);
+
   // Fetch candidate info
   useEffect(() => {
     if (!token) return;
@@ -49,7 +51,28 @@ export default function InterviewPage() {
       .then((res) => {
         setCandidateInfo(res.data);
         setSessionId(res.data.session_id);
-        if (res.data.session_status === "ended") setInterviewState("complete");
+        if (typeof window !== "undefined") {
+          (window as any).__candidateInfoLoaded = res.data;
+        }
+
+        if (res.data.turns && res.data.turns.length > 0) {
+          setTranscript(res.data.turns);
+        }
+
+        if (res.data.resumption_token) {
+          sessionStorage.setItem(`resumption_token_${token}`, res.data.resumption_token);
+          if (typeof window !== "undefined") {
+            (window as any).__latestResumptionToken = res.data.resumption_token;
+          }
+        }
+
+        if (res.data.session_status === "ended") {
+          setInterviewState("complete");
+        } else if (res.data.session_status === "active") {
+          setConsentGranted(true);
+          setHardwareCheckDone(true);
+          setInterviewState("connecting");
+        }
       })
       .catch(() => setInterviewState("complete"));
   }, [token]);
@@ -74,6 +97,9 @@ export default function InterviewPage() {
 
     if (state === "reconnecting") {
       muteRef.current?.();
+      if (typeof window !== "undefined") {
+        (window as any).__audioMutedDuringReconnect = true;
+      }
       connectionLostTimerRef.current = setTimeout(() => {
         setConnectionLostLong(true);
       }, 60_000);
@@ -90,8 +116,13 @@ export default function InterviewPage() {
   const handleReconnected = useCallback(() => {
     if (reconnectedPromptTimerRef.current) clearTimeout(reconnectedPromptTimerRef.current);
     setReconnectedPrompt(true);
-    reconnectedPromptTimerRef.current = setTimeout(() => setReconnectedPrompt(false), 10_000);
+    reconnectedPromptTimerRef.current = setTimeout(() => setReconnectedPrompt(false), 5_000);
   }, []);
+
+  const handleResumptionToken = useCallback((resToken: string) => {
+    if (token) sessionStorage.setItem(`resumption_token_${token}`, resToken);
+    if (typeof window !== "undefined") (window as any).__latestResumptionToken = resToken;
+  }, [token]);
 
   const handleTranscript = useCallback((turn: Pick<TranscriptTurn, "speaker" | "text">) => {
     setTranscript((prev) => [...prev.slice(-9), turn]); // keep last 10
@@ -136,11 +167,13 @@ export default function InterviewPage() {
   const { connect, send, sendJson, disconnect, connectionState } = useAudioWebSocket({
     sessionId: sessionId ?? 0,
     token,
+    resumptionToken: candidateInfo?.resumption_token,
     onAudioChunk: playChunk,
     onTranscript: handleTranscript,
     onStateChange: handleStateChange,
     onSpeakerChange: handleSpeakerChange,
     onReconnected: handleReconnected,
+    onResumptionToken: handleResumptionToken,
   });
 
   const { start: startCapture, stop: stopCapture, mute, unmute } = useAudioCapture({
@@ -149,6 +182,25 @@ export default function InterviewPage() {
 
   muteRef.current = mute;
   unmuteRef.current = unmute;
+
+  useEffect(() => {
+    if (
+      sessionId &&
+      candidateInfo?.session_status === "active" &&
+      !autoResumedRef.current
+    ) {
+      autoResumedRef.current = true;
+      (async () => {
+        try {
+          await initPlayback();
+          connect();
+          await startCapture();
+        } catch (err) {
+          console.error("[InterviewPage] Failed to resume session:", err);
+        }
+      })();
+    }
+  }, [sessionId, candidateInfo, initPlayback, connect, startCapture]);
 
   const toggleMic = useCallback(() => {
     if (micMutedRef.current) {
@@ -241,9 +293,9 @@ export default function InterviewPage() {
               <CheckCircle className="h-4 w-4 shrink-0" />
               <span>Hardware checks passed. You're ready to start.</span>
             </div>
-            <Button className="w-full" size="lg" onClick={startInterview}>
+            <Button className="w-full" size="lg" data-testid="start-interview-button" onClick={startInterview}>
               <Mic className="h-4 w-4 mr-2" />
-              Start Interview
+              Mulai Wawancara / Start Interview
             </Button>
           </div>
         )}
@@ -287,22 +339,22 @@ export default function InterviewPage() {
       {/* Reconnecting banner */}
       {interviewState === "reconnecting" && (
         connectionLostLong ? (
-          <div className="flex items-center gap-2 text-sm bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-2.5 mt-2">
+          <div className="flex items-center gap-2 text-sm bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-2.5 mt-2" data-testid="reconnecting-banner">
             <span className="animate-pulse">●</span>
-            <span>Connection is taking too long to restore. Please wait, and contact the interviewer if this persists.</span>
+            <span>Koneksi terputus cukup lama. Mohon tunggu sebentar, atau hubungi pewawancara jika berlanjut. / Connection is taking too long to restore.</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg px-4 py-2.5 mt-2">
+          <div className="flex items-center gap-2 text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg px-4 py-2.5 mt-2" data-testid="reconnecting-banner">
             <span className="animate-pulse">●</span>
-            <span>Briefly reconnecting — please wait a moment.</span>
+            <span>Menghubungkan kembali... Mohon tunggu sebentar. / Briefly reconnecting — please wait a moment.</span>
           </div>
         )
       )}
 
       {/* Reconnected prompt */}
       {reconnectedPrompt && (
-        <div className="flex items-center justify-between text-sm bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-4 py-2.5 mt-2">
-          <span>Reconnected — please say <strong>"check"</strong> or continue your answer to resume.</span>
+        <div className="flex items-center justify-between text-sm bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-4 py-2.5 mt-2" data-testid="reconnected-banner">
+          <span>Terhubung kembali / Reconnected — silakan lanjutkan jawaban Anda atau katakan <strong>"check"</strong> untuk melanjutkan.</span>
           <button className="ml-3 text-blue-500 hover:text-blue-700 shrink-0" onClick={() => setReconnectedPrompt(false)}>✕</button>
         </div>
       )}

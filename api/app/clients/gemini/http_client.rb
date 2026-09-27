@@ -2,7 +2,7 @@
 
 module Gemini
   class HttpClient
-    BASE_URL = 'https://generativelanguage.googleapis.com/v1'
+    BASE_URL = ENV.fetch('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta')
 
     class ApiError < StandardError
       attr_reader :status, :body
@@ -17,10 +17,11 @@ module Gemini
     class RateLimitError < ApiError; end
     class TimeoutError < ApiError; end
 
-    def initialize(model: nil, api_key: nil, timeout: 60)
+    def initialize(model: nil, api_key: nil, timeout: 60, base_url: nil)
       @model = model
       @api_key = api_key || ENV.fetch('GEMINI_API_KEY')
       @timeout = timeout
+      @base_url = base_url || BASE_URL
       @connection = build_connection
     end
 
@@ -38,7 +39,7 @@ module Gemini
     private
 
     def generate_url
-      "#{BASE_URL}/models/#{@model}:generateContent"
+      "#{@base_url}/models/#{@model}:generateContent"
     end
 
     def request_headers
