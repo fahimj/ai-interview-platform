@@ -16,4 +16,12 @@ FactoryBot.define do
     evidence { ['I used React hooks and context for state management.'] }
     competency_summary { 'Demonstrates strong understanding of component lifecycle.' }
   end
+
+  factory :fit_gap_report do
+    portfolio
+    vacancy
+    skill_comparisons { [{ skill_label: 'React Framework', result: 'match', candidate_level: 3, expected_level: 3 }] }
+    culture_narrative { 'Good cultural alignment.' }
+    overall_narrative { 'Solid engineering candidate.' }
+  end
 end

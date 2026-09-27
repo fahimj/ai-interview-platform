@@ -16,18 +16,16 @@ RSpec.describe 'Tenant Scoping & Unscoped Endpoints Characterization', type: :re
     allow(FitGapGeneratorWorker).to receive(:perform_async)
   end
 
-  describe 'Cross-Tenant Scoping Leak on Portfolios (GAP P0-3)' do
-    it 'characterizes that regenerate_fitgap does not enforce tenant scoping and finds cross-tenant portfolio' do
+  describe 'Tenant Scoping on Portfolios (resolved GAP P0-3)' do
+    it 'enforces tenant scoping and returns 404 Not Found for cross-tenant portfolio' do
       headers = authenticated_headers(admin_a, scheme: org_a.scheme)
 
       post "/api/v1/portfolios/#{portfolio_b.id}/regenerate_fitgap",
            params: { vacancy_id: vacancy_a.id }.to_json,
            headers: headers
 
-      # Current code calls Portfolio.find(params[:id]) without tenant scoping,
-      # so it accepts the foreign portfolio from org_b.
-      expect(response).to have_http_status(:accepted)
-      expect(json_body[:status]).to eq('generating')
+      expect(response).to have_http_status(:not_found)
+      expect(json_body[:errors].first[:message]).to eq('Portfolio not found')
     end
   end
 end
