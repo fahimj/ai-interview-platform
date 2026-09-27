@@ -77,6 +77,14 @@ export function useAudioPlayback() {
     setTimeout(fn, remaining);
   }, []);
 
+  const init = useCallback(async () => {
+    const ctx = getCtx();
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+    return ctx;
+  }, []);
+
   const stop = useCallback(() => {
     cancelDrain();
     audioCtxRef.current?.close();
@@ -84,5 +92,5 @@ export function useAudioPlayback() {
     nextPlayTimeRef.current = 0;
   }, [cancelDrain]);
 
-  return { playChunk, stop, scheduleAfterPlayback, waitForDrain, cancelDrain };
+  return { playChunk, stop, scheduleAfterPlayback, waitForDrain, cancelDrain, init };
 }

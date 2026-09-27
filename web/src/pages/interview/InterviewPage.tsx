@@ -21,6 +21,7 @@ import { useAudioPlayback } from "@/hooks/useAudioPlayback";
 import { useAudioWebSocket } from "@/hooks/useAudioWebSocket";
 import { sessionsApi } from "@/services/sessions";
 import HardwareCheck from "@/components/HardwareCheck";
+import PreFlightConsentModal from "@/components/interview/PreFlightConsentModal";
 import { CheckCircle, Mic, MicOff } from "lucide-react";
 import type { CandidateInfo, InterviewState, InterviewSpeaker, TranscriptTurn } from "@/types";
 
@@ -31,6 +32,8 @@ export default function InterviewPage() {
   const [interviewState, setInterviewState] = useState<InterviewState>("idle");
   const [speaker, setSpeaker] = useState<InterviewSpeaker>(null);
   const [transcript, setTranscript] = useState<Pick<TranscriptTurn, "speaker" | "text">[]>([]);
+  const [consentGranted, setConsentGranted] = useState(false);
+  const [consentDeclined, setConsentDeclined] = useState(false);
   const [hardwareCheckDone, setHardwareCheckDone] = useState(false); // kept for green banner
   const [connectionLostLong, setConnectionLostLong] = useState(false);
   const [reconnectedPrompt, setReconnectedPrompt] = useState(false);
@@ -94,7 +97,7 @@ export default function InterviewPage() {
     setTranscript((prev) => [...prev.slice(-9), turn]); // keep last 10
   }, []);
 
-  const { playChunk, stop: stopPlayback, scheduleAfterPlayback, waitForDrain, cancelDrain } = useAudioPlayback();
+  const { playChunk, stop: stopPlayback, scheduleAfterPlayback, waitForDrain, cancelDrain, init: initPlayback } = useAudioPlayback();
   const audioCompleteCalledRef = useRef(false);
   const audioCompleteSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,13 +165,15 @@ export default function InterviewPage() {
   const startInterview = useCallback(async () => {
     if (!sessionId) return;
     setInterviewState("connecting");
+    // Explicit candidate user gesture initializes live capture & playback AudioContexts (ADR 0005)
+    await initPlayback();
     connect();
     await startCapture();
     // Start muted — only unmute when backend sends speaker_changed: candidate.
     // This prevents mic audio from being sent during AI speech, since separate
     // AudioContexts for capture/playback break the browser's echo cancellation.
     muteRef.current?.();
-  }, [sessionId, connect, startCapture]);
+  }, [sessionId, connect, startCapture, initPlayback]);
 
   const endInterview = useCallback(async () => {
     setInterviewState("ending");
@@ -189,6 +194,20 @@ export default function InterviewPage() {
 
   // ── State A: Pre-start ──────────────────────────────────────────────────
   if (interviewState === "idle") {
+    if (consentDeclined) {
+      return (
+        <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
+          <div className="text-4xl">🛡️</div>
+          <h2 className="text-xl font-semibold">Consent Declined / Persetujuan Ditolak</h2>
+          <p className="text-sm text-muted-foreground">
+            Under Indonesian UU PDP No. 27/2022, affirmative consent is required to process biometric voice data for this interview.
+            <br />
+            If you have questions or concerns about data privacy, please contact your recruiter.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
         <div className="text-center space-y-1">
@@ -200,7 +219,13 @@ export default function InterviewPage() {
           )}
         </div>
 
-        {!hardwareCheckDone ? (
+        {!consentGranted ? (
+          <PreFlightConsentModal
+            isOpen={true}
+            onConsent={() => setConsentGranted(true)}
+            onDecline={() => setConsentDeclined(true)}
+          />
+        ) : !hardwareCheckDone ? (
           <div className="space-y-4">
             <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-1.5 text-muted-foreground">
               <p>• This is a voice interview. Make sure you're in a quiet place.</p>
